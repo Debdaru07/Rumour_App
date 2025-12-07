@@ -2,18 +2,18 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorageService {
-  Future<void> saveMessages(
+  Future<void> cacheMessages(
     String roomId,
-    List<Map<String, dynamic>> messages,
+    List<Map<String, dynamic>> msgs,
   ) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString('cache_$roomId', jsonEncode(messages));
+    prefs.setString("cache_$roomId", jsonEncode(msgs));
   }
 
-  Future<List<Map<String, dynamic>>> loadMessages(String roomId) async {
+  Future<List<Map<String, dynamic>>> loadCachedMessages(String roomId) async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString('cache_$roomId');
-    if (jsonString == null) return [];
-    return List<Map<String, dynamic>>.from(jsonDecode(jsonString));
+    final raw = prefs.getString("cache_$roomId");
+    if (raw == null) return [];
+    return List<Map<String, dynamic>>.from(jsonDecode(raw));
   }
 }

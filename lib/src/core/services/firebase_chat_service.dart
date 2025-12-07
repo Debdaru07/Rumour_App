@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FirebaseChatService {
   final _db = FirebaseFirestore.instance;
 
-  // Create new room
   Future<String> createRoom(String code) async {
     final doc = _db.collection('rooms').doc();
     await doc.set({
@@ -14,32 +13,18 @@ class FirebaseChatService {
     return doc.id;
   }
 
-  // Find room by code
   Future<String?> getRoomIdByCode(String code) async {
-    final result =
+    final snapshot =
         await _db
             .collection('rooms')
             .where('code', isEqualTo: code)
             .limit(1)
             .get();
 
-    if (result.docs.isEmpty) return null;
-    return result.docs.first.id;
+    if (snapshot.docs.isEmpty) return null;
+    return snapshot.docs.first.id;
   }
 
-  // Send message
-  Future<void> sendMessage(String roomId, Map<String, dynamic> msg) async {
-    final msgRef =
-        _db.collection('rooms').doc(roomId).collection('messages').doc();
-
-    await msgRef.set({...msg, 'createdAt': FieldValue.serverTimestamp()});
-
-    await _db.collection('rooms').doc(roomId).update({
-      'lastMessageAt': FieldValue.serverTimestamp(),
-    });
-  }
-
-  // Listener for realtime messages
   Stream<QuerySnapshot> watchMessages(String roomId) {
     return _db
         .collection('rooms')
@@ -49,17 +34,13 @@ class FirebaseChatService {
         .snapshots();
   }
 
-  // Paginated fetch
-  Future<QuerySnapshot> fetchMore(String roomId, DocumentSnapshot? lastDoc) {
-    var query = _db
-        .collection('rooms')
-        .doc(roomId)
-        .collection('messages')
-        .orderBy('createdAt', descending: true)
-        .limit(20);
+  Future<void> sendMessage(String roomId, Map<String, dynamic> msg) async {
+    final ref =
+        _db.collection('rooms').doc(roomId).collection('messages').doc();
+    await ref.set({...msg, 'createdAt': FieldValue.serverTimestamp()});
 
-    if (lastDoc != null) query = query.startAfterDocument(lastDoc);
-
-    return query.get();
+    await _db.collection('rooms').doc(roomId).update({
+      'lastMessageAt': FieldValue.serverTimestamp(),
+    });
   }
 }
