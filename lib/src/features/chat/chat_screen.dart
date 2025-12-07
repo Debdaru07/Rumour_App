@@ -11,6 +11,9 @@ class ChatScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final msgController = TextEditingController();
+    final args = ModalRoute.of(context)!.settings.arguments as Map;
+    final roomCode = args['roomCode'];
+    final identity = args['identity'];
 
     return Scaffold(
       backgroundColor: AppColors.background,

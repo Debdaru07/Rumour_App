@@ -83,7 +83,11 @@ class JoinRoomScreen extends StatelessWidget {
                     selectedColor: AppColors.accent,
                   ),
                   onCompleted: (code) {
-                    // TODO: Navigate to Name Generation Screen
+                    Navigator.pushNamed(
+                      context,
+                      '/name',
+                      arguments: {'roomCode': code},
+                    );
                   },
                   onChanged: (_) {},
                 ),

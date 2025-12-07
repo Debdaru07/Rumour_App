@@ -123,7 +123,15 @@ class NameScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: GestureDetector(
                 onTap: () {
-                  // TODO: Navigate to chat screen
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/chat',
+                        arguments: {'roomCode': roomCode, 'identity': identity},
+                      );
+                    },
+                  );
                 },
                 child: Container(
                   width: double.infinity,
