@@ -1,0 +1,30 @@
+import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
+
+class MessageModel {
+  final String id;
+  final String text;
+  final String senderId;
+  final String senderName;
+  final String senderAvatar;
+  final DateTime? createdAt;
+
+  MessageModel({
+    required this.id,
+    required this.text,
+    required this.senderId,
+    required this.senderName,
+    required this.senderAvatar,
+    this.createdAt,
+  });
+
+  factory MessageModel.fromJson(String id, Map<String, dynamic> json) {
+    return MessageModel(
+      id: id,
+      text: json['text'],
+      senderId: json['senderId'],
+      senderName: json['senderName'],
+      senderAvatar: json['senderAvatar'],
+      createdAt: (json['createdAt'] as Timestamp?)?.toDate(),
+    );
+  }
+}
