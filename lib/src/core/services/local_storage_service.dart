@@ -7,7 +7,7 @@ class LocalStorageService {
     List<Map<String, dynamic>> msgs,
   ) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString("cache_$roomId", jsonEncode(msgs));
+    await prefs.setString("cache_$roomId", jsonEncode(msgs));
   }
 
   Future<List<Map<String, dynamic>>> loadCachedMessages(String roomId) async {

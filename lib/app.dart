@@ -20,7 +20,7 @@ class RumourApp extends StatelessWidget {
 
       theme: ThemeData(
         scaffoldBackgroundColor: AppColors.background,
-        textTheme: GoogleFonts.interTextTheme(),
+        textTheme: GoogleFonts.poppinsTextTheme(),
         colorScheme: const ColorScheme.dark(),
       ),
 
@@ -29,8 +29,8 @@ class RumourApp extends StatelessWidget {
       routes: {
         '/first_splash': (context) => const FirstTimeSplashScreen(),
         '/join': (context) => const JoinRoomScreen(),
-        '/name': (context) => const NameScreen(roomCode: '', identity: ''),
-        '/chat': (context) => const ChatScreen(identity: '', roomCode: ''),
+        '/name': (context) => const NameScreen(),
+        '/chat': (context) => const ChatScreen(),
       },
     );
   }

@@ -1,4 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
+import 'package:cloud_firestore/cloud_firestore.dart'
+    show DocumentSnapshot, Timestamp;
 
 class MessageModel {
   final String id;
@@ -27,4 +28,24 @@ class MessageModel {
       createdAt: (json['createdAt'] as Timestamp?)?.toDate(),
     );
   }
+
+  factory MessageModel.fromFirestore(DocumentSnapshot doc) {
+    final json = doc.data() as Map<String, dynamic>;
+    return MessageModel(
+      id: doc.id,
+      text: json['text'] ?? '',
+      senderId: json['senderId'] ?? '',
+      senderName: json['senderName'] ?? '',
+      senderAvatar: json['senderAvatar'] ?? '',
+      createdAt: (json['createdAt'] as Timestamp?)?.toDate(),
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'text': text,
+    'senderId': senderId,
+    'senderName': senderName,
+    'senderAvatar': senderAvatar,
+    // createdAt is set server-side
+  };
 }

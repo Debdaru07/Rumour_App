@@ -43,4 +43,19 @@ class FirebaseChatService {
       'lastMessageAt': FieldValue.serverTimestamp(),
     });
   }
+
+  Future<QuerySnapshot> fetchMessagesPage(
+    String roomId, {
+    DocumentSnapshot? startAfter,
+    int limit = 20,
+  }) {
+    var q = _db
+        .collection('rooms')
+        .doc(roomId)
+        .collection('messages')
+        .orderBy('createdAt', descending: true)
+        .limit(limit);
+    if (startAfter != null) q = q.startAfterDocument(startAfter);
+    return q.get();
+  }
 }
