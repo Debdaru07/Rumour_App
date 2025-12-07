@@ -56,7 +56,6 @@ flutter:
   assets:
     - assets/icons/app_logo.png
 
-# 🔥 NATIVE SPLASH CONFIG (must be at root level)
 flutter_native_splash:
   color: "#0D0D0D"
   image: assets/icons/app_logo.png
