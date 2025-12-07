@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import '../../core/constants/app_colors.dart';
 import 'name_controller.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class NameScreen extends StatelessWidget {
   const NameScreen({super.key});
@@ -10,9 +11,10 @@ class NameScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final args =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
-    final String roomId = args?['roomId'];
-    final String? roomCode = args?['roomCode'];
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+
+    final String roomId = args['roomId'] ?? '';
+    final String roomCode = args['roomCode'] ?? '';
 
     return ChangeNotifierProvider(
       create: (_) {
@@ -27,9 +29,13 @@ class NameScreen extends StatelessWidget {
 
 class NameScreenBody extends StatelessWidget {
   final String roomId;
-  final String? roomCode;
+  final String roomCode;
 
-  const NameScreenBody({super.key, required this.roomId, this.roomCode});
+  const NameScreenBody({
+    super.key,
+    required this.roomId,
+    required this.roomCode,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -40,56 +46,82 @@ class NameScreenBody extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
+
+            // ---------------- HEADER ----------------
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
+
+                // back button circle
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    padding: const EdgeInsets.all(8),
+                    height: 42,
+                    width: 42,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF1E1E1E),
+                      color: Color(0xFF1F2430),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.arrow_back, color: Colors.white),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
                 ),
-                const Spacer(),
+                Spacer(),
+                // room info
                 Column(
                   children: [
                     Text(
-                      "Room ${roomCode ?? ''}",
-                      style: GoogleFonts.inter(
+                      "Room #$roomCode",
+                      style: GoogleFonts.poppins(
                         fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "Members: anonymous",
-                      style: GoogleFonts.inter(
+                      "4 members",
+                      style: GoogleFonts.poppins(
                         fontSize: 13,
+                        fontWeight: FontWeight.w400,
                         color: AppColors.textGrey,
                       ),
                     ),
                   ],
                 ),
-                const Spacer(),
-                const SizedBox(width: 48),
+                Spacer(),
+                // right placeholder circle
+                Container(
+                  height: 42,
+                  width: 42,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF0D0D0D),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+
+                const SizedBox(width: 12),
               ],
             ),
-            const SizedBox(height: 60),
+
+            Spacer(),
+            // ---------------- IDENTITY CARD ----------------
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 22),
               child: Container(
+                width: double.infinity,
                 padding: const EdgeInsets.symmetric(
                   vertical: 40,
-                  horizontal: 20,
+                  horizontal: 22,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF101820),
-                  borderRadius: BorderRadius.circular(20),
+                  color: const Color(0xFF0F1525), // dark navy from Figma
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 child:
                     ctrl.loading
@@ -98,42 +130,52 @@ class NameScreenBody extends StatelessWidget {
                           children: [
                             Text(
                               "For this room, you are",
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
                                 color: AppColors.textGrey,
+                                height: 1.3,
                               ),
                             ),
-                            const SizedBox(height: 16),
+
+                            const SizedBox(height: 22),
+
+                            // IDENTITY NAME
                             Text(
-                              ctrl.identity?['name'] ?? 'Anonymous',
+                              ctrl.identity?['name'] ?? "Anonymous",
                               textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
+                              style: GoogleFonts.poppins(
                                 fontSize: 36,
-                                fontWeight: FontWeight.w900,
+                                fontWeight: FontWeight.w800,
+                                height: 1.1,
                                 color: AppColors.accent,
                               ),
                             ),
-                            const SizedBox(height: 16),
+
+                            const SizedBox(height: 20),
+
                             Text(
                               "This is your anonymous identifier, visible only to others in this room.",
-                              style: GoogleFonts.inter(
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.poppins(
                                 fontSize: 14,
+                                height: 1.5,
                                 color: AppColors.textGrey,
                               ),
-                              textAlign: TextAlign.center,
                             ),
                           ],
                         ),
               ),
             ),
-            const Spacer(),
+
+            // ---------------- BUTTON ----------------
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 50),
               child: GestureDetector(
                 onTap: () {
                   final identity =
                       ctrl.identity ??
                       {'id': 'anon', 'name': 'Anonymous', 'avatar': ''};
+
                   Navigator.pushReplacementNamed(
                     context,
                     '/chat',
@@ -149,12 +191,20 @@ class NameScreenBody extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   decoration: BoxDecoration(
                     color: AppColors.accent,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accent.withOpacity(0.35),
+                        blurRadius: 22,
+                        spreadRadius: 1,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Center(
                     child: Text(
                       "Acknowledge and continue",
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.black,
@@ -164,7 +214,8 @@ class NameScreenBody extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+
+            const SizedBox(height: 10),
           ],
         ),
       ),
