@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'src/core/constants/app_colors.dart';
+import 'src/features/rooms/rooms_screen.dart';
 import 'src/features/splash/first_time_splash_screen.dart';
 import 'src/features/join_room/join_room_screen.dart';
 import 'src/features/name_generation/name_screen.dart';
@@ -42,7 +43,7 @@ class RumourApp extends StatelessWidget {
         '/first_splash': (context) => const FirstTimeSplashScreen(),
         '/join': (context) => const JoinRoomScreen(),
         '/name': (context) => const NameScreen(),
-
+        '/rooms': (context) => const RoomsScreen(),
         // ------------------------------------------
         // CHAT ROUTE — Pass session if returning user
         // ------------------------------------------
@@ -77,6 +78,6 @@ class RumourApp extends StatelessWidget {
     }
 
     // Default — Join screen
-    return '/join';
+    return '/rooms';
   }
 }

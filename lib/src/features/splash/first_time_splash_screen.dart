@@ -18,7 +18,7 @@ class _FirstTimeSplashScreenState extends State<FirstTimeSplashScreen> {
 
     Future.delayed(const Duration(seconds: 2), () async {
       await FirstLaunchService.setLaunched();
-      Navigator.pushReplacementNamed(context, '/join');
+      Navigator.pushReplacementNamed(context, '/rooms');
     });
   }
 
