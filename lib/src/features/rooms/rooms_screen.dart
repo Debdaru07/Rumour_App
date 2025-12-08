@@ -17,9 +17,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
   bool creating = false;
   String? errorText;
 
-  // -----------------------------
-  // CREATE ROOM
-  // -----------------------------
   Future<void> _createRoom() async {
     final name = nameCtrl.text.trim();
     final code = codeCtrl.text.trim();
@@ -71,9 +68,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
     setState(() => creating = false);
   }
 
-  // -----------------------------
-  // DELETE ROOM
-  // -----------------------------
   Future<void> _deleteRoom(String roomId) async {
     await FirebaseFirestore.instance.collection("rooms").doc(roomId).delete();
   }
@@ -93,7 +87,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
             ),
             content: Text(
               'Are you sure you want to delete "$roomName"?',
-              style: GoogleFonts.poppins(color: Colors.white70, height: 1.4),
+              style: GoogleFonts.poppins(color: Colors.white70),
             ),
             actions: [
               TextButton(
@@ -121,9 +115,33 @@ class _RoomsScreenState extends State<RoomsScreen> {
     );
   }
 
-  // -----------------------------
-  // ROOM TILE UI
-  // -----------------------------
+  Widget _glassDeleteButton(VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 32,
+        width: 32,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.04),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.redAccent.withOpacity(0.35)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.redAccent.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 12,
+            ),
+          ],
+        ),
+        child: Icon(
+          Icons.delete_outline,
+          size: 18,
+          color: Colors.redAccent.withOpacity(0.9),
+        ),
+      ),
+    );
+  }
+
   Widget _roomTile({
     required String roomId,
     required String name,
@@ -143,11 +161,10 @@ class _RoomsScreenState extends State<RoomsScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: const Color(0xFF0F1525),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Row(
           children: [
-            // ICON
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -156,10 +173,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
               ),
               child: const Icon(Icons.group, color: Colors.black),
             ),
-
             const SizedBox(width: 16),
-
-            // NAME + META INFO
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,8 +187,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
                     ),
                   ),
                   const SizedBox(height: 3),
-
-                  // Members + Room Code
                   Text(
                     "$members members   •   Code: $code",
                     style: GoogleFonts.poppins(
@@ -185,20 +197,8 @@ class _RoomsScreenState extends State<RoomsScreen> {
                 ],
               ),
             ),
-
-            // DELETE BUTTON
-            GestureDetector(
-              onTap: () => _confirmDelete(roomId, name),
-              child: const Icon(
-                Icons.delete_outline,
-                color: Colors.redAccent,
-                size: 22,
-              ),
-            ),
-
+            _glassDeleteButton(() => _confirmDelete(roomId, name)),
             const SizedBox(width: 10),
-
-            // Expand / Forward Icon (JOIN)
             const Icon(
               Icons.arrow_forward_ios,
               size: 16,
@@ -210,12 +210,10 @@ class _RoomsScreenState extends State<RoomsScreen> {
     );
   }
 
-  // -----------------------------
-  // UI
-  // -----------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
@@ -232,12 +230,8 @@ class _RoomsScreenState extends State<RoomsScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // -----------------------------
-            // ROOM LIST — max 5 visible at once
-            // -----------------------------
             SizedBox(
-              height: 350, // ~ 4–5 tiles
+              height: 280,
               child: StreamBuilder<QuerySnapshot>(
                 stream:
                     FirebaseFirestore.instance
@@ -267,7 +261,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
                   return ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     children:
-                        docs.map((d) {
+                        docs.take(50).map((d) {
                           final data = d.data() as Map<String, dynamic>;
                           return _roomTile(
                             roomId: d.id,
@@ -280,10 +274,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
                 },
               ),
             ),
-
             const SizedBox(height: 30),
-
-            // CREATE ROOM SECTION
             Text(
               "Create a New Room",
               style: GoogleFonts.poppins(
@@ -292,23 +283,19 @@ class _RoomsScreenState extends State<RoomsScreen> {
                 color: Colors.white,
               ),
             ),
-
             const SizedBox(height: 14),
-
             _inputField(
               controller: nameCtrl,
               label: "Room Name",
               hint: "e.g. Weekend Sync",
             ),
             const SizedBox(height: 20),
-
             _inputField(
               controller: codeCtrl,
               label: "Room Code",
               hint: "Enter a 4-digit code",
               keyboard: TextInputType.number,
             ),
-
             if (errorText != null)
               Padding(
                 padding: const EdgeInsets.only(top: 10),
@@ -317,9 +304,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
                   style: const TextStyle(color: Colors.redAccent),
                 ),
               ),
-
             const SizedBox(height: 26),
-
             GestureDetector(
               onTap: creating ? null : _createRoom,
               child: Container(
@@ -348,9 +333,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 26),
-
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, "/join"),
               child: Text(
@@ -362,7 +345,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 40),
           ],
         ),
@@ -370,9 +352,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
     );
   }
 
-  // -----------------------------
-  // Input Field
-  // -----------------------------
   Widget _inputField({
     required TextEditingController controller,
     required String label,

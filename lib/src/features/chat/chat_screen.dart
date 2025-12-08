@@ -98,177 +98,180 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
   Widget build(BuildContext context) {
     final ctrl = Provider.of<ChatController>(context);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 14),
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 14),
 
-            StreamBuilder<DocumentSnapshot>(
-              stream:
-                  FirebaseFirestore.instance
-                      .collection("rooms")
-                      .doc(widget.roomId)
-                      .snapshots(),
-              builder: (context, snapshot) {
-                int memberCount = 0;
+              StreamBuilder<DocumentSnapshot>(
+                stream:
+                    FirebaseFirestore.instance
+                        .collection("rooms")
+                        .doc(widget.roomId)
+                        .snapshots(),
+                builder: (context, snapshot) {
+                  int memberCount = 0;
 
-                if (snapshot.hasData && snapshot.data!.exists) {
-                  final data = snapshot.data!.data() as Map<String, dynamic>;
-                  final members = data['members'] as List<dynamic>? ?? [];
-                  memberCount = members.length;
-                }
+                  if (snapshot.hasData && snapshot.data!.exists) {
+                    final data = snapshot.data!.data() as Map<String, dynamic>;
+                    final members = data['members'] as List<dynamic>? ?? [];
+                    memberCount = members.length;
+                  }
 
-                return Row(
-                  children: [
-                    const SizedBox(width: 16),
-                    const Spacer(),
-                    Column(
-                      children: [
-                        Text(
-                          "Room #${widget.roomCode}",
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
+                  return Row(
+                    children: [
+                      const SizedBox(width: 16),
+                      const Spacer(),
+                      Column(
+                        children: [
+                          Text(
+                            "Room #${widget.roomCode}",
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "$memberCount members",
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: AppColors.textGrey,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: _exitRoom,
+                        child: Container(
+                          height: 42,
+                          width: 42,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF1F2430),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.logout,
+                            size: 22,
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "$memberCount members",
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            color: AppColors.textGrey,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: _exitRoom,
-                      child: Container(
-                        height: 42,
-                        width: 42,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF1F2430),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.logout,
-                          size: 22,
-                          color: Colors.white,
-                        ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                  ],
-                );
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            Expanded(
-              child:
-                  ctrl.messages.isEmpty
-                      ? Center(
-                        child: Text(
-                          "No messages yet",
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            color: AppColors.textGrey,
-                          ),
-                        ),
-                      )
-                      : ListView.builder(
-                        controller: _scroll,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        itemCount: ctrl.messages.length,
-                        itemBuilder: (context, index) {
-                          final msg = ctrl.messages[index];
-
-                          if (msg.type == "system") {
-                            return SystemMessageBanner(text: msg.text);
-                          }
-
-                          bool showDate = false;
-                          if (index == 0) {
-                            showDate = true;
-                          } else {
-                            final prev = ctrl.messages[index - 1];
-                            if (msg.createdAt == null ||
-                                prev.createdAt == null) {
-                              showDate = true;
-                            } else {
-                              showDate =
-                                  !isSameDay(msg.createdAt!, prev.createdAt!);
-                            }
-                          }
-
-                          return Column(
-                            children: [
-                              if (showDate)
-                                Center(
-                                  child: DateSeparator(
-                                    text: formatDateLabel(msg.createdAt),
-                                  ),
-                                ),
-                              MessageBubble(
-                                isMe: msg.senderId == widget.identity['id'],
-                                senderAvatar: msg.senderAvatar,
-                                senderName: msg.senderName,
-                                text: msg.text,
-                                timestamp: msg.createdAt,
-                              ),
-                              const SizedBox(height: 6),
-                            ],
-                          );
-                        },
-                      ),
-            ),
-
-            if (ctrl.loading)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 10),
-                child: CircularProgressIndicator(
-                  color: Colors.white24,
-                  strokeWidth: 2,
-                ),
+                      const SizedBox(width: 16),
+                    ],
+                  );
+                },
               ),
 
-            MessageInputField(
-              controller: _controller,
-              onSend: () async {
-                final text = _controller.text.trim();
-                if (text.isEmpty) return;
+              const SizedBox(height: 20),
 
-                final msg = MessageModel(
-                  id: '',
-                  type: "text",
-                  text: text,
-                  senderId: widget.identity['id'],
-                  senderName: widget.identity['name'],
-                  senderAvatar: widget.identity['avatar'],
-                  createdAt: DateTime.now(),
-                );
+              Expanded(
+                child:
+                    ctrl.messages.isEmpty
+                        ? Center(
+                          child: Text(
+                            "No messages yet",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: AppColors.textGrey,
+                            ),
+                          ),
+                        )
+                        : ListView.builder(
+                          controller: _scroll,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          itemCount: ctrl.messages.length,
+                          itemBuilder: (context, index) {
+                            final msg = ctrl.messages[index];
 
-                await ctrl.sendMessage(widget.roomId, msg.toMap());
-                _controller.clear();
+                            if (msg.type == "system") {
+                              return SystemMessageBanner(text: msg.text);
+                            }
 
-                Future.delayed(const Duration(milliseconds: 100), () {
-                  _scroll.animateTo(
-                    _scroll.position.maxScrollExtent + 200,
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOut,
+                            bool showDate = false;
+                            if (index == 0) {
+                              showDate = true;
+                            } else {
+                              final prev = ctrl.messages[index - 1];
+                              if (msg.createdAt == null ||
+                                  prev.createdAt == null) {
+                                showDate = true;
+                              } else {
+                                showDate =
+                                    !isSameDay(msg.createdAt!, prev.createdAt!);
+                              }
+                            }
+
+                            return Column(
+                              children: [
+                                if (showDate)
+                                  Center(
+                                    child: DateSeparator(
+                                      text: formatDateLabel(msg.createdAt),
+                                    ),
+                                  ),
+                                MessageBubble(
+                                  isMe: msg.senderId == widget.identity['id'],
+                                  senderAvatar: msg.senderAvatar,
+                                  senderName: msg.senderName,
+                                  text: msg.text,
+                                  timestamp: msg.createdAt,
+                                ),
+                                const SizedBox(height: 6),
+                              ],
+                            );
+                          },
+                        ),
+              ),
+
+              if (ctrl.loading)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 10),
+                  child: CircularProgressIndicator(
+                    color: Colors.white24,
+                    strokeWidth: 2,
+                  ),
+                ),
+
+              MessageInputField(
+                controller: _controller,
+                onSend: () async {
+                  final text = _controller.text.trim();
+                  if (text.isEmpty) return;
+
+                  final msg = MessageModel(
+                    id: '',
+                    type: "text",
+                    text: text,
+                    senderId: widget.identity['id'],
+                    senderName: widget.identity['name'],
+                    senderAvatar: widget.identity['avatar'],
+                    createdAt: DateTime.now(),
                   );
-                });
-              },
-            ),
-          ],
+
+                  await ctrl.sendMessage(widget.roomId, msg.toMap());
+                  _controller.clear();
+
+                  Future.delayed(const Duration(milliseconds: 100), () {
+                    _scroll.animateTo(
+                      _scroll.position.maxScrollExtent + 200,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOut,
+                    );
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

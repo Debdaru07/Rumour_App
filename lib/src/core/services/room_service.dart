@@ -3,41 +3,49 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class RoomService {
   final _db = FirebaseFirestore.instance;
 
-  Future<void> createRoom(String roomCode) async {
-    final doc = _db.collection('rooms').doc(roomCode.trim());
+  Future<String> createRoom(String name, String code) async {
+    final ref = await _db.collection("rooms").add({
+      "name": name,
+      "code": code,
+      "members": [],
+      "createdAt": FieldValue.serverTimestamp(),
+    });
+    return ref.id;
+  }
 
-    final snap = await doc.get();
+  Future<String?> getRoomIdFromCode(String code) async {
+    final snap =
+        await _db
+            .collection("rooms")
+            .where("code", isEqualTo: code)
+            .limit(1)
+            .get();
 
-    if (!snap.exists) {
-      await doc.set({
-        'roomCode': roomCode,
-        'createdAt': FieldValue.serverTimestamp(),
-        'lastActive': FieldValue.serverTimestamp(),
-        'members': 0,
-      });
-    }
+    if (snap.docs.isEmpty) return null;
+    return snap.docs.first.id;
+  }
+
+  Future<bool> roomExists(String code) async {
+    final snap =
+        await _db
+            .collection("rooms")
+            .where("code", isEqualTo: code)
+            .limit(1)
+            .get();
+    return snap.docs.isNotEmpty;
   }
 
   Stream<int> watchMemberCount(String roomId) {
-    return _db.collection('rooms').doc(roomId).snapshots().map((snap) {
-      if (!snap.exists) return 0;
-      final data = snap.data();
-      if (data == null) return 0;
-
-      final members = data['members'] as List<dynamic>? ?? [];
+    return _db.collection("rooms").doc(roomId).snapshots().map((doc) {
+      if (!doc.exists) return 0;
+      final data = doc.data()!;
+      final members = data["members"] as List<dynamic>? ?? [];
       return members.length;
     });
   }
 
-  Future<bool> roomExists(String roomCode) async {
-    final snap = await _db.collection('rooms').doc(roomCode.trim()).get();
-    return snap.exists;
-  }
-
   Future<void> joinRoom(String roomId, Map<String, dynamic> identity) async {
-    final ref = _db.collection('rooms').doc(roomId);
-
-    await ref.update({
+    await _db.collection("rooms").doc(roomId).update({
       "members": FieldValue.arrayUnion([identity]),
       "lastActive": FieldValue.serverTimestamp(),
     });
@@ -46,9 +54,7 @@ class RoomService {
   }
 
   Future<void> exitRoom(String roomId, Map<String, dynamic> identity) async {
-    final ref = _db.collection('rooms').doc(roomId);
-
-    await ref.update({
+    await _db.collection("rooms").doc(roomId).update({
       "members": FieldValue.arrayRemove([identity]),
       "lastActive": FieldValue.serverTimestamp(),
     });
@@ -57,10 +63,10 @@ class RoomService {
   }
 
   Future<void> sendSystemMessage(String roomId, String text) async {
-    await _db.collection('rooms').doc(roomId).collection('messages').add({
-      'type': 'system',
-      'text': text,
-      'createdAt': FieldValue.serverTimestamp(),
+    await _db.collection("rooms").doc(roomId).collection("messages").add({
+      "type": "system",
+      "text": text,
+      "createdAt": FieldValue.serverTimestamp(),
     });
   }
 }

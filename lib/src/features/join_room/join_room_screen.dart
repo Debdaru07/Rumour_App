@@ -1,3 +1,4 @@
+import 'dart:developer' as console;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
@@ -18,20 +19,22 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
   String? errorMessage;
 
   Future<void> _verifyRoomAndProceed(String code) async {
+    console.log("Entered Code: $code");
+
     setState(() {
       isLoading = true;
       errorMessage = null;
     });
 
-    final roomService = RoomService();
-    final exists = await roomService.roomExists(code);
+    final roomId = await RoomService().getRoomIdFromCode(code.trim());
+    console.log("Resolved Room ID: $roomId");
 
     if (!mounted) return;
 
-    if (!exists) {
+    if (roomId == null) {
       setState(() {
         isLoading = false;
-        errorMessage = "Room not found. Try '1234'.";
+        errorMessage = "Room not found.";
       });
       return;
     }
@@ -39,12 +42,10 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
     Navigator.pushNamed(
       context,
       '/name',
-      arguments: {'roomId': code, 'roomCode': code},
+      arguments: {'roomId': roomId, 'roomCode': code},
     );
 
-    setState(() {
-      isLoading = false;
-    });
+    setState(() => isLoading = false);
   }
 
   @override
@@ -53,20 +54,14 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 12),
 
-            // ----------------------------------------------------
-            // BACK BUTTON (NEW)
-            // ----------------------------------------------------
             Row(
               children: [
                 const SizedBox(width: 16),
                 GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
+                  onTap: () => Navigator.pop(context),
                   child: Container(
                     height: 42,
                     width: 42,
@@ -86,7 +81,6 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
 
             const SizedBox(height: 26),
 
-            // Top Logo Circle
             Center(
               child: Container(
                 height: 72,
@@ -103,7 +97,6 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
 
             const Spacer(),
 
-            // Title
             Text(
               "Join A Room",
               style: GoogleFonts.poppins(
@@ -115,28 +108,16 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
 
             const SizedBox(height: 16),
 
-            // Subtitle
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 60),
               child: Text(
-                "Enter the code to join the anon chat room",
+                "Enter the code to join the anonymous chat room",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 18,
-                  fontWeight: FontWeight.w400,
                   color: AppColors.textGrey,
                   height: 1.4,
                 ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            Text(
-              "Hint: Try room code 1234",
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.white.withOpacity(0.6),
               ),
             ),
 
@@ -145,7 +126,6 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 48),
               child: Container(
-                height: 70,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 22,
                   vertical: 12,
@@ -160,14 +140,10 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
                   cursorColor: AppColors.accent,
                   keyboardType: TextInputType.number,
                   animationType: AnimationType.fade,
-                  enableActiveFill: false,
-
                   textStyle: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 22,
-                    fontWeight: FontWeight.w500,
                   ),
-
                   pinTheme: PinTheme(
                     shape: PinCodeFieldShape.underline,
                     fieldHeight: 35,
@@ -176,21 +152,15 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
                     activeColor: AppColors.accent,
                     selectedColor: AppColors.accent,
                   ),
-
+                  onCompleted: (code) async => _verifyRoomAndProceed(code),
                   onChanged: (_) {},
-
-                  onCompleted: (code) async {
-                    await _verifyRoomAndProceed(code);
-                  },
                 ),
               ),
             ),
 
-            const SizedBox(height: 12),
-
             if (errorMessage != null)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.only(top: 12),
                 child: Text(
                   errorMessage!,
                   style: GoogleFonts.poppins(
