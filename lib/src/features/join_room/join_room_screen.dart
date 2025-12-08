@@ -4,9 +4,49 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_assets.dart';
+import '../../core/services/room_service.dart';
 
-class JoinRoomScreen extends StatelessWidget {
+class JoinRoomScreen extends StatefulWidget {
   const JoinRoomScreen({super.key});
+
+  @override
+  State<JoinRoomScreen> createState() => _JoinRoomScreenState();
+}
+
+class _JoinRoomScreenState extends State<JoinRoomScreen> {
+  bool isLoading = false;
+  String? errorMessage;
+
+  Future<void> _verifyRoomAndProceed(String code) async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    final roomService = RoomService();
+    final exists = await roomService.roomExists(code);
+
+    if (!mounted) return;
+
+    if (!exists) {
+      setState(() {
+        isLoading = false;
+        errorMessage = "Room not found. Try '1234'.";
+      });
+      return;
+    }
+
+    // SUCCESS: navigate
+    Navigator.pushNamed(
+      context,
+      '/name',
+      arguments: {'roomId': code, 'roomCode': code},
+    );
+
+    setState(() {
+      isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,13 +58,13 @@ class JoinRoomScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 48),
 
-            // Top Logo Circle (exact size & spacing from Figma)
+            // Top Logo Circle
             Center(
               child: Container(
                 height: 72,
                 width: 72,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A1A),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF1A1A1A),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -47,7 +87,7 @@ class JoinRoomScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Subtitle (exact line height & center align)
+            // Subtitle
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 60),
               child: Text(
@@ -62,9 +102,20 @@ class JoinRoomScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 42),
+            const SizedBox(height: 24),
 
-            // PIN Code Box
+            // Hint Text: Try 1234
+            Text(
+              "Hint: Try room code 1234",
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.6),
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // PIN Entry Box
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 48),
               child: Container(
@@ -83,6 +134,7 @@ class JoinRoomScreen extends StatelessWidget {
                   cursorColor: AppColors.accent,
                   keyboardType: TextInputType.number,
                   animationType: AnimationType.fade,
+                  enableActiveFill: false,
 
                   textStyle: GoogleFonts.poppins(
                     color: Colors.white,
@@ -97,23 +149,41 @@ class JoinRoomScreen extends StatelessWidget {
                     inactiveColor: const Color(0xFF818181),
                     activeColor: AppColors.accent,
                     selectedColor: AppColors.accent,
-                    inactiveFillColor: Colors.transparent,
                   ),
 
                   onChanged: (_) {},
-                  onCompleted: (code) {
-                    Navigator.pushNamed(
-                      context,
-                      '/name',
-                      arguments: {
-                        'roomId': code, // <— roomId = code
-                        'roomCode': code,
-                      },
-                    );
+
+                  onCompleted: (code) async {
+                    await _verifyRoomAndProceed(code);
                   },
                 ),
               ),
             ),
+
+            const SizedBox(height: 12),
+
+            // ERROR TEXT BELOW PIN FIELD
+            if (errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  errorMessage!,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.redAccent,
+                  ),
+                ),
+              ),
+
+            // LOADING INDICATOR
+            if (isLoading)
+              const Padding(
+                padding: EdgeInsets.only(top: 18),
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              ),
 
             const Spacer(),
           ],
