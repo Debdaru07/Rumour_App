@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../models/message_model.dart';
 import '../../core/services/room_service.dart';
 import 'chat_controller.dart';
+
 import 'widgets/date_separator.dart';
 import 'widgets/message_bubble.dart';
 import 'widgets/message_input_field.dart';
+import 'widgets/system_message_banner.dart';
 
 class ChatScreen extends StatelessWidget {
   const ChatScreen({super.key});
@@ -27,7 +30,7 @@ class ChatScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) {
         final c = ChatController();
-        c.startListening(roomId);
+        c.startListening(roomId); // uses Firestore stream
         return c;
       },
       child: ChatScreenBody(
@@ -93,18 +96,27 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
             const SizedBox(height: 14),
 
             // ---------------------------------------------------------------------------
-            // TOP BAR (with REALTIME member count)
+            // TOP BAR WITH REALTIME MEMBER COUNT
             // ---------------------------------------------------------------------------
-            StreamBuilder<int>(
-              stream: RoomService().watchMemberCount(widget.roomId),
+            StreamBuilder<DocumentSnapshot>(
+              stream:
+                  FirebaseFirestore.instance
+                      .collection("rooms")
+                      .doc(widget.roomId)
+                      .snapshots(),
               builder: (context, snapshot) {
-                final memberCount = snapshot.data ?? 0;
+                int memberCount = 0;
+
+                if (snapshot.hasData && snapshot.data!.exists) {
+                  final data = snapshot.data!.data() as Map<String, dynamic>;
+                  final members = data['members'] as List<dynamic>? ?? [];
+                  memberCount = members.length;
+                }
 
                 return Row(
                   children: [
                     const SizedBox(width: 16),
 
-                    // back button
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
                       child: Container(
@@ -148,7 +160,6 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
 
                     const Spacer(),
 
-                    // exit button
                     GestureDetector(
                       onTap: _exitRoom,
                       child: Container(
@@ -175,7 +186,7 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
             const SizedBox(height: 20),
 
             // ---------------------------------------------------------------------------
-            // MESSAGES LIST
+            // MESSAGE LIST (REALTIME STREAM)
             // ---------------------------------------------------------------------------
             Expanded(
               child:
@@ -189,77 +200,64 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                           ),
                         ),
                       )
-                      : NotificationListener<ScrollNotification>(
-                        onNotification: (n) {
-                          if (n.metrics.pixels <= 100 &&
-                              !ctrl.loading &&
-                              ctrl.hasMore) {
-                            ctrl.loadMore(widget.roomId);
+                      : ListView.builder(
+                        controller: _scroll,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        itemCount: ctrl.messages.length,
+                        itemBuilder: (context, index) {
+                          final msg = ctrl.messages[index];
+
+                          // ---------------- SYSTEM MESSAGES ----------------
+                          if (msg.type == "system") {
+                            return SystemMessageBanner(text: msg.text);
                           }
-                          return false;
-                        },
-                        child: ListView.builder(
-                          controller: _scroll,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          itemCount: ctrl.messages.length + 1,
-                          itemBuilder: (context, index) {
-                            if (index == 0) return const SizedBox(height: 6);
 
-                            final msg = ctrl.messages[index - 1];
-                            bool showDate = false;
+                          bool showDate = false;
 
-                            final currTime = msg.createdAt;
-                            DateTime? prevTime;
+                          if (index == 0) {
+                            showDate = true;
+                          } else {
+                            final prev = ctrl.messages[index - 1];
 
-                            if (index - 2 < 0) {
+                            if (msg.createdAt == null ||
+                                prev.createdAt == null) {
                               showDate = true;
                             } else {
-                              final prev = ctrl.messages[index - 2];
-                              prevTime = prev.createdAt;
-
-                              if (currTime == null || prevTime == null) {
-                                showDate = true;
-                              } else {
-                                showDate = !isSameDay(currTime, prevTime);
-                              }
+                              showDate =
+                                  !isSameDay(msg.createdAt!, prev.createdAt!);
                             }
+                          }
 
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (showDate)
-                                  Center(
-                                    child: DateSeparator(
-                                      text: formatDateLabel(msg.createdAt),
-                                    ),
+                          return Column(
+                            children: [
+                              if (showDate)
+                                Center(
+                                  child: DateSeparator(
+                                    text: formatDateLabel(msg.createdAt),
                                   ),
-
-                                MessageBubble(
-                                  isMe: msg.senderId == widget.identity['id'],
-                                  senderAvatar: msg.senderAvatar,
-                                  senderName: msg.senderName,
-                                  text: msg.text,
-                                  timestamp: msg.createdAt,
                                 ),
 
-                                const SizedBox(height: 4),
-                              ],
-                            );
-                          },
-                        ),
+                              MessageBubble(
+                                isMe: msg.senderId == widget.identity['id'],
+                                senderAvatar: msg.senderAvatar,
+                                senderName: msg.senderName ?? "",
+                                text: msg.text,
+                                timestamp: msg.createdAt,
+                              ),
+
+                              const SizedBox(height: 6),
+                            ],
+                          );
+                        },
                       ),
             ),
 
-            if (ctrl.loading)
-              const LinearProgressIndicator(
-                color: Colors.white24,
-                minHeight: 2,
-              ),
-
+            // ---------------------------------------------------------------------------
             // INPUT FIELD
+            // ---------------------------------------------------------------------------
             MessageInputField(
               controller: _controller,
               onSend: () async {
@@ -268,6 +266,7 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
 
                 final msg = MessageModel(
                   id: '',
+                  type: "text",
                   text: text,
                   senderId: widget.identity['id'],
                   senderName: widget.identity['name'],
@@ -279,9 +278,9 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
 
                 _controller.clear();
 
-                Future.delayed(const Duration(milliseconds: 200), () {
+                Future.delayed(const Duration(milliseconds: 100), () {
                   _scroll.animateTo(
-                    _scroll.position.maxScrollExtent + 120,
+                    _scroll.position.maxScrollExtent + 150,
                     duration: const Duration(milliseconds: 250),
                     curve: Curves.easeOut,
                   );

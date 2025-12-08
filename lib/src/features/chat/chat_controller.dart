@@ -34,6 +34,7 @@ class ChatController with ChangeNotifier {
                   m['createdAt'] != null
                       ? DateTime.tryParse(m['createdAt'])
                       : null,
+              type: m['type'] ?? '',
             ),
           ),
         );
