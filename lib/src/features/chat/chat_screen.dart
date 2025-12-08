@@ -62,9 +62,18 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scroll = ScrollController();
 
+  ChatController? _chatCtrl;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Safe lookup of provider before dispose stage
+    _chatCtrl = Provider.of<ChatController>(context, listen: false);
+  }
+
   @override
   void dispose() {
-    Provider.of<ChatController>(context, listen: false).disposeListener();
+    _chatCtrl?.disposeListener();
     _controller.dispose();
     _scroll.dispose();
     super.dispose();
@@ -79,10 +88,7 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
     final prefs = await SharedPreferences.getInstance();
     prefs.remove('lastRoomId');
     prefs.remove('identity');
-
-    if (mounted) {
-      Navigator.pushNamedAndRemoveUntil(context, '/join', (_) => false);
-    }
+    if (mounted) Navigator.pop(context);
   }
 
   @override
@@ -118,22 +124,6 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                   children: [
                     const SizedBox(width: 16),
 
-                    // GestureDetector(
-                    //   onTap: () => Navigator.pop(context),
-                    //   child: Container(
-                    //     height: 42,
-                    //     width: 42,
-                    //     decoration: const BoxDecoration(
-                    //       color: Color(0xFF1F2430),
-                    //       shape: BoxShape.circle,
-                    //     ),
-                    //     child: const Icon(
-                    //       Icons.arrow_back,
-                    //       size: 22,
-                    //       color: Colors.white,
-                    //     ),
-                    //   ),
-                    // ),
                     const Spacer(),
 
                     Column(

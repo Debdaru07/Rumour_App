@@ -199,7 +199,7 @@ class NameScreenBody extends StatelessWidget {
                   await RoomService().joinRoom(roomId, identity);
 
                   // Continue → go into chat
-                  Navigator.pushReplacementNamed(
+                  Navigator.pushNamed(
                     context,
                     '/chat',
                     arguments: {
