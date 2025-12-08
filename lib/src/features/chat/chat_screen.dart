@@ -22,7 +22,7 @@ class ChatScreen extends StatelessWidget {
     final args =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
 
-    final String roomId = args?['roomId'];
+    final String roomId = args?['roomId'] ?? '';
     final String? roomCode = args?['roomCode'];
     final Map<String, dynamic> identity =
         args?['identity'] ?? {'id': 'anon', 'name': 'Anonymous', 'avatar': ''};
@@ -64,6 +64,7 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
 
   @override
   void dispose() {
+    Provider.of<ChatController>(context, listen: false).disposeListener();
     _controller.dispose();
     _scroll.dispose();
     super.dispose();
@@ -243,7 +244,7 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                               MessageBubble(
                                 isMe: msg.senderId == widget.identity['id'],
                                 senderAvatar: msg.senderAvatar,
-                                senderName: msg.senderName ?? "",
+                                senderName: msg.senderName,
                                 text: msg.text,
                                 timestamp: msg.createdAt,
                               ),
