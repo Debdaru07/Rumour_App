@@ -221,7 +221,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
         child: Column(
           children: [
             const SizedBox(height: 14),
-
             Center(
               child: Text(
                 "Create a Room",
@@ -232,7 +231,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
 
             // -----------------------------
