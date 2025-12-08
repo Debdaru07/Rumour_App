@@ -1,56 +1,61 @@
-Rumour – Anonymous Realtime Chat Rooms (Flutter + Firebase)
+# **Rumour – Anonymous Realtime Chat Rooms (Flutter + Firebase)**
 
-Rumour is a realtime, anonymous chat application built using Flutter and Firebase Cloud Firestore.
-Users can browse available rooms, join using a 4-digit room code, auto-generate an anonymous identity, and chat in realtime with offline caching and message pagination.
+Rumour is a realtime, anonymous chat application built using **Flutter** and **Firebase Cloud Firestore**.  
+Users can browse available rooms, join using a 4-digit room code, auto-generate an anonymous identity, and chat in realtime with **offline caching** and **message pagination**.
 
-This repository includes:
+---
 
-✅ Full Flutter source code
-✅ Firestore structure documentation
-✅ Working APK
-✅ Demo video walkthrough
+## ✅ **This repository includes**
 
-🚀 Features
-🔹 Realtime Chat
+- Full Flutter source code
+- Firestore structure documentation
+- Working APK
+- Demo video walkthrough
 
-Messages sync instantly using Firestore streams
+---
 
-System messages (user joined / exited)
+# 🚀 **Features**
 
-Live member count per room
+### 🔹 **Realtime Chat**
 
-🔹 Anonymous Identity
+- Instant messaging using Firestore streams
+- System messages (user joined / exited)
+- Live member count updates
 
-Each user gets a temporary random identity per room.
+### 🔹 **Anonymous Identity**
 
-🔹 Rooms Directory
+Each user gets a generated identity unique to the room.
 
-List of available rooms
+### 🔹 **Rooms Directory**
 
-Member count indicator
+- List of available rooms
+- Member count indicator
+- Quick navigation into any room
 
-Quick navigation
+### 🔹 **Join Room With 4-Digit Code**
 
-🔹 Join Room With 4-Digit Code
+- Validates room existence
+- Flow → Join → Name Assignment → Chat
 
-Code validation
+### 🔹 **Message Pagination**
 
-Autoflow → Name Assignment → Chat Screen
+- Loads older messages page-by-page (15 at a time)
+- Efficient for large/history-heavy rooms
 
-🔹 Message Pagination
+### 🔹 **Offline Support**
 
-Loads older messages page-by-page (15 at a time)
+- Cached messages
+- App loads previous messages instantly, even without internet
 
-Efficient for large chat histories
+### 🔹 **Firebase Security Rules**
 
-🔹 Offline Support
+Recommended rules included below.
 
-Cached messages per room
+---
 
-App loads cached messages instantly even without internet
+# 📁 **Codebase Structure**
 
-🔹 Firestore Security Rules (Recommended)
-📁 Codebase Structure
+```plaintext
 lib/
 │
 ├── app.dart
@@ -67,11 +72,11 @@ lib/
 │   │       ├── local_storage_service.dart
 │   │
 │   ├── features/
-│       ├── rooms/                # Rooms listing screen
+│       ├── rooms/
 │       │   └── rooms_screen.dart
-│       ├── join_room/            # Join via 4-digit code
+│       ├── join_room/
 │       │   └── join_room_screen.dart
-│       ├── name_generation/      # Anonymous identity creator
+│       ├── name_generation/
 │       │   ├── name_screen.dart
 │       │   └── name_controller.dart
 │       ├── chat/
@@ -85,9 +90,13 @@ lib/
 │
 ├── firebase_options.dart
 └── README.md
+```
 
-☁️ Firebase Cloud Firestore Structure
-Collection: rooms
+---
+
+# Firebase Cloud Firestore Structure
+
+```plaintext
 rooms
   └── {roomId}
        ├── name: string
@@ -102,81 +111,14 @@ rooms
                  ├── senderAvatar: string
                  ├── type: "text" | "system"
                  ├── createdAt: Timestamp
+```
 
-📦 APK Download
+---
 
-👉 Download APK: (Insert your APK link here — e.g., GitHub Releases or Drive)
-[APK Download Link]
+## APK Download
 
-🎥 Demo Video
+👉 Download APK: [url]
 
-👉 Watch Demo Video:
-[Video Link Here]
+## Demo Video
 
-The video demonstrates:
-
-Opening the app
-
-Viewing available rooms
-
-Joining room using 4-digit code
-
-Identity selection
-
-Realtime chat with others
-
-Pagination
-
-Offline support behavior
-
-🛠️ Running the Project Locally
-1. Clone the repository
-git clone https://github.com/yourusername/rumour.git
-cd rumour
-
-2. Install dependencies
-flutter pub get
-
-3. Setup Firebase
-
-Add your Android/iOS Firebase apps
-
-Update google-services.json / GoogleService-Info.plist
-
-Ensure firebase_options.dart is generated
-
-4. Run the app
-flutter run
-
-🧪 Testing Offline Mode
-
-Open a chat room
-
-Disable Wi-Fi
-
-Cached messages remain visible
-
-Reconnect → pending messages sync automatically
-
-🔐 Recommended Firestore Security Rules
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-
-    match /rooms/{roomId} {
-      allow read, write: if true; // For testing only
-
-      match /messages/{messageId} {
-        allow read, write: if true;
-      }
-    }
-  }
-}
-
-
-⚠️ Replace with authenticated rules before production.
-
-❤️ Credits
-
-Built with Flutter & Firestore
-Developed by Debdaru (Deb)
+👉 Watch Demo: [url]
