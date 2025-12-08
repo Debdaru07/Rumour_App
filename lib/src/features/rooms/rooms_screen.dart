@@ -36,16 +36,16 @@ class _RoomsScreenState extends State<RoomsScreen> {
       errorText = null;
     });
 
-    final query =
+    final exists =
         await FirebaseFirestore.instance
             .collection("rooms")
             .where("code", isEqualTo: code)
             .get();
 
-    if (query.docs.isNotEmpty) {
+    if (exists.docs.isNotEmpty) {
       setState(() {
         creating = false;
-        errorText = "Room code already exists. Choose another.";
+        errorText = "Room code already exists.";
       });
       return;
     }
@@ -68,6 +68,50 @@ class _RoomsScreenState extends State<RoomsScreen> {
     setState(() => creating = false);
   }
 
+  Future<void> _deleteRoom(String roomId) async {
+    await FirebaseFirestore.instance.collection("rooms").doc(roomId).delete();
+  }
+
+  void _confirmDelete(String roomId, String roomName) {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            backgroundColor: const Color(0xFF1A1A1A),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            title: Text(
+              "Delete Room?",
+              style: GoogleFonts.poppins(color: Colors.white),
+            ),
+            content: Text(
+              "Are you sure you want to delete \"$roomName\"?",
+              style: GoogleFonts.poppins(color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  "Cancel",
+                  style: GoogleFonts.poppins(color: Colors.white70),
+                ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await _deleteRoom(roomId);
+                },
+                child: Text(
+                  "Delete",
+                  style: GoogleFonts.poppins(color: Colors.redAccent),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,7 +120,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
         child: Column(
           children: [
             const SizedBox(height: 14),
-
             Center(
               child: Text(
                 "Create a Room",
@@ -87,7 +130,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
 
             Expanded(
@@ -115,9 +157,9 @@ class _RoomsScreenState extends State<RoomsScreen> {
                               .snapshots(),
                       builder: (context, snap) {
                         if (!snap.hasData) {
-                          return const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(24.0),
+                          return const Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Center(
                               child: CircularProgressIndicator(
                                 color: Colors.white,
                               ),
@@ -149,67 +191,113 @@ class _RoomsScreenState extends State<RoomsScreen> {
                                 final roomCode = data["code"] ?? '';
                                 final members = data["members"] ?? [];
 
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      "/name",
-                                      arguments: {
-                                        "roomId": roomId,
-                                        "roomCode": roomCode,
-                                      },
-                                    );
-                                  },
-                                  child: Container(
-                                    margin: const EdgeInsets.only(bottom: 14),
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF0F1525),
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(10),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.accent,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.group,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 14),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0F1525),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.pushNamed(
+                                            context,
+                                            "/name",
+                                            arguments: {
+                                              "roomId": roomId,
+                                              "roomCode": roomCode,
+                                            },
+                                          );
+                                        },
+                                        child: Row(
                                           children: [
-                                            Text(
-                                              roomName,
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.white,
+                                            Container(
+                                              padding: const EdgeInsets.all(10),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.accent,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Icon(
+                                                Icons.group,
+                                                color: Colors.black,
                                               ),
                                             ),
-                                            Text(
-                                              "${members.length} members",
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 13,
-                                                color: AppColors.textGrey,
-                                              ),
+                                            const SizedBox(width: 16),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  roomName,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  "${members.length} members",
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 13,
+                                                    color: AppColors.textGrey,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
-                                        const Spacer(),
-                                        const Icon(
-                                          Icons.arrow_forward_ios,
-                                          size: 16,
-                                          color: Colors.white70,
+                                      ),
+                                      const Spacer(),
+                                      GestureDetector(
+                                        onTapDown:
+                                            (_) => setState(
+                                              () {},
+                                            ), // enables tap animation
+                                        onTap:
+                                            () => _confirmDelete(
+                                              roomId,
+                                              roomName,
+                                            ),
+                                        child: AnimatedScale(
+                                          duration: const Duration(
+                                            milliseconds: 120,
+                                          ),
+                                          scale: 0.92,
+                                          child: Container(
+                                            height: 34,
+                                            width: 34,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(
+                                                0.06,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: Colors.redAccent
+                                                    .withOpacity(0.35),
+                                                width: 1.0,
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.redAccent
+                                                      .withOpacity(0.15),
+                                                  blurRadius: 10,
+                                                  spreadRadius: 1,
+                                                ),
+                                              ],
+                                            ),
+                                            child: Icon(
+                                              Icons.delete_outline,
+                                              size: 18,
+                                              color: Colors.redAccent
+                                                  .withOpacity(0.9),
+                                            ),
+                                          ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 );
                               }).toList(),
@@ -229,15 +317,12 @@ class _RoomsScreenState extends State<RoomsScreen> {
                     ),
 
                     const SizedBox(height: 14),
-
                     _inputField(
                       controller: nameCtrl,
                       label: "Room Name",
                       hint: "e.g. Weekend Sync",
                     ),
-
                     const SizedBox(height: 20),
-
                     _inputField(
                       controller: codeCtrl,
                       label: "Room Code",
