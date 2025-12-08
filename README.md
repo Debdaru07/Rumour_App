@@ -121,4 +121,4 @@ rooms
 
 ## Demo Video
 
-👉 Watch Demo: [url]
+👉 Watch Demo: [\[url\]](https://www.loom.com/share/034383c742fb4097bfbdfc3fc9ad727a)
