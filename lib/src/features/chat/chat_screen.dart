@@ -30,7 +30,7 @@ class ChatScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) {
         final c = ChatController();
-        c.startListening(roomId); // uses Firestore stream
+        c.startListening(roomId);
         return c;
       },
       child: ChatScreenBody(
@@ -62,18 +62,23 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scroll = ScrollController();
 
-  ChatController? _chatCtrl;
-
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Safe lookup of provider before dispose stage
-    _chatCtrl = Provider.of<ChatController>(context, listen: false);
+  void initState() {
+    super.initState();
+
+    // PAGINATION TRIGGER
+    _scroll.addListener(() {
+      if (_scroll.position.pixels <= 150) {
+        Provider.of<ChatController>(
+          context,
+          listen: false,
+        ).loadMore(widget.roomId);
+      }
+    });
   }
 
   @override
   void dispose() {
-    _chatCtrl?.disposeListener();
     _controller.dispose();
     _scroll.dispose();
     super.dispose();
@@ -88,7 +93,10 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
     final prefs = await SharedPreferences.getInstance();
     prefs.remove('lastRoomId');
     prefs.remove('identity');
-    if (mounted) Navigator.pop(context);
+
+    if (mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, '/rooms', (_) => false);
+    }
   }
 
   @override
@@ -176,7 +184,7 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
             const SizedBox(height: 20),
 
             // ---------------------------------------------------------------------------
-            // MESSAGE LIST (REALTIME STREAM)
+            // MESSAGE LIST (REALTIME + PAGINATION)
             // ---------------------------------------------------------------------------
             Expanded(
               child:
@@ -245,6 +253,15 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                       ),
             ),
 
+            if (ctrl.loading)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 10),
+                child: CircularProgressIndicator(
+                  color: Colors.white24,
+                  strokeWidth: 2,
+                ),
+              ),
+
             // ---------------------------------------------------------------------------
             // INPUT FIELD
             // ---------------------------------------------------------------------------
@@ -264,13 +281,12 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                   createdAt: DateTime.now(),
                 );
 
-                await ctrl.sendMessage(widget.roomId, msg);
-
+                await ctrl.sendMessage(widget.roomId, msg.toMap());
                 _controller.clear();
 
                 Future.delayed(const Duration(milliseconds: 100), () {
                   _scroll.animateTo(
-                    _scroll.position.maxScrollExtent + 150,
+                    _scroll.position.maxScrollExtent + 200,
                     duration: const Duration(milliseconds: 250),
                     curve: Curves.easeOut,
                   );
