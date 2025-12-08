@@ -117,7 +117,7 @@ rooms
 
 ## APK Download
 
-👉 Download APK: [url]
+👉 Download APK: [\[url\]](https://drive.google.com/file/d/1iNbF6zeDemWl789NOZH4sznfb-e7C_IB/view?usp=sharing)
 
 ## Demo Video
 
