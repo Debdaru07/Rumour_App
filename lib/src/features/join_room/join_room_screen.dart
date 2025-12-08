@@ -36,7 +36,6 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
       return;
     }
 
-    // SUCCESS: navigate
     Navigator.pushNamed(
       context,
       '/name',
@@ -56,7 +55,36 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 48),
+            const SizedBox(height: 12),
+
+            // ----------------------------------------------------
+            // BACK BUTTON (NEW)
+            // ----------------------------------------------------
+            Row(
+              children: [
+                const SizedBox(width: 16),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    height: 42,
+                    width: 42,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF1F2430),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 26),
 
             // Top Logo Circle
             Center(
@@ -104,7 +132,6 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
 
             const SizedBox(height: 24),
 
-            // Hint Text: Try 1234
             Text(
               "Hint: Try room code 1234",
               style: GoogleFonts.poppins(
@@ -115,7 +142,6 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
 
             const SizedBox(height: 30),
 
-            // PIN Entry Box
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 48),
               child: Container(
@@ -162,7 +188,6 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
 
             const SizedBox(height: 12),
 
-            // ERROR TEXT BELOW PIN FIELD
             if (errorMessage != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -175,7 +200,6 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
                 ),
               ),
 
-            // LOADING INDICATOR
             if (isLoading)
               const Padding(
                 padding: EdgeInsets.only(top: 18),

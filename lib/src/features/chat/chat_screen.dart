@@ -118,23 +118,22 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                   children: [
                     const SizedBox(width: 16),
 
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        height: 42,
-                        width: 42,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF1F2430),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back,
-                          size: 22,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-
+                    // GestureDetector(
+                    //   onTap: () => Navigator.pop(context),
+                    //   child: Container(
+                    //     height: 42,
+                    //     width: 42,
+                    //     decoration: const BoxDecoration(
+                    //       color: Color(0xFF1F2430),
+                    //       shape: BoxShape.circle,
+                    //     ),
+                    //     child: const Icon(
+                    //       Icons.arrow_back,
+                    //       size: 22,
+                    //       color: Colors.white,
+                    //     ),
+                    //   ),
+                    // ),
                     const Spacer(),
 
                     Column(
