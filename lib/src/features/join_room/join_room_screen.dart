@@ -105,7 +105,10 @@ class JoinRoomScreen extends StatelessWidget {
                     Navigator.pushNamed(
                       context,
                       '/name',
-                      arguments: {'roomCode': code},
+                      arguments: {
+                        'roomId': code, // <— roomId = code
+                        'roomCode': code,
+                      },
                     );
                   },
                 ),

@@ -40,6 +40,7 @@ class ChatScreenBody extends StatefulWidget {
   final String roomId;
   final String? roomCode;
   final Map<String, dynamic> identity;
+
   const ChatScreenBody({
     super.key,
     required this.roomId,
@@ -71,62 +72,93 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
+
+            // ---------------- TOP APP BAR ----------------
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 const SizedBox(width: 16),
+
+                // Back button circle (Figma accurate)
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    padding: const EdgeInsets.all(8),
+                    height: 42,
+                    width: 42,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF1E1E1E),
+                      color: Color(0xFF1F2430),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.arrow_back, color: Colors.white),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      size: 22,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
+
                 const Spacer(),
+
+                // Center room title
                 Column(
                   children: [
                     Text(
-                      "Room ${widget.roomCode ?? ''}",
-                      style: GoogleFonts.inter(
+                      "Room #${widget.roomCode}",
+                      style: GoogleFonts.poppins(
                         fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
-                      "Members: anonymous",
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
+                      "4 members",
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
                         color: AppColors.textGrey,
                       ),
                     ),
                   ],
                 ),
+
                 const Spacer(),
-                const SizedBox(width: 50),
+
+                // Right black placeholder circle (Figma)
+                Container(
+                  height: 42,
+                  width: 42,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFF0D0D0D),
+                  ),
+                ),
+
+                const SizedBox(width: 16),
               ],
             ),
+
             const SizedBox(height: 20),
 
-            // Messages
+            // ---------------- MESSAGES LIST ----------------
             Expanded(
               child:
                   ctrl.messages.isEmpty
                       ? Center(
                         child: Text(
                           "No messages yet",
-                          style: GoogleFonts.inter(color: AppColors.textGrey),
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            color: AppColors.textGrey,
+                          ),
                         ),
                       )
                       : NotificationListener<ScrollNotification>(
-                        onNotification: (notification) {
-                          if (notification.metrics.pixels <= 100 &&
+                        onNotification: (n) {
+                          if (n.metrics.pixels <= 100 &&
                               !ctrl.loading &&
                               ctrl.hasMore) {
-                            // load more older
                             ctrl.loadMore(widget.roomId);
                           }
                           return false;
@@ -139,64 +171,74 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                           ),
                           itemCount: ctrl.messages.length + 1,
                           itemBuilder: (context, index) {
-                            if (index == 0) {
-                              // top space
-                              return const SizedBox(height: 6);
-                            }
+                            if (index == 0) return const SizedBox(height: 6);
+
                             final msg = ctrl.messages[index - 1];
-                            // date separators: insert a separator when day changes
                             bool showDate = false;
+
                             if (index - 2 >= 0) {
                               final prev = ctrl.messages[index - 2];
-                              if (msg.createdAt != null &&
-                                  prev.createdAt != null) {
-                                showDate =
-                                    !isSameDay(msg.createdAt!, prev.createdAt!);
-                              } else if (index - 2 < 0) {
-                                showDate = true;
-                              }
+                              showDate =
+                                  !isSameDay(msg.createdAt!, prev.createdAt!);
                             } else {
                               showDate = true;
                             }
 
                             return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (showDate)
-                                  DateSeparator(
-                                    text: formatDateLabel(msg.createdAt),
+                                  Center(
+                                    child: DateSeparator(
+                                      text: formatDateLabel(msg.createdAt),
+                                    ),
                                   ),
+
+                                // message bubble (styled)
                                 MessageBubble(
                                   isMe: msg.senderId == widget.identity['id'],
                                   senderName: msg.senderName,
                                   text: msg.text,
+                                  timestamp: msg.createdAt,
                                 ),
+
+                                const SizedBox(height: 4),
                               ],
                             );
                           },
                         ),
                       ),
             ),
-            if (ctrl.loading) const LinearProgressIndicator(),
+
+            if (ctrl.loading)
+              const LinearProgressIndicator(
+                minHeight: 2,
+                color: Colors.white24,
+              ),
+
+            // ---------------- INPUT FIELD ----------------
             MessageInputField(
               controller: _controller,
               onSend: () async {
                 final text = _controller.text.trim();
                 if (text.isEmpty) return;
+
                 final msg = MessageModel(
                   id: '',
                   text: text,
                   senderId: widget.identity['id'],
                   senderName: widget.identity['name'],
-                  senderAvatar: widget.identity['avatar'] ?? '',
+                  senderAvatar: widget.identity['avatar'],
                   createdAt: DateTime.now(),
                 );
+
                 await ctrl.sendMessage(widget.roomId, msg);
                 _controller.clear();
-                // scroll to bottom after delay
+
                 Future.delayed(const Duration(milliseconds: 250), () {
                   _scroll.animateTo(
-                    _scroll.position.maxScrollExtent + 80,
-                    duration: const Duration(milliseconds: 300),
+                    _scroll.position.maxScrollExtent + 120,
+                    duration: const Duration(milliseconds: 250),
                     curve: Curves.easeOut,
                   );
                 });
@@ -215,8 +257,7 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
   String formatDateLabel(DateTime? dt) {
     if (dt == null) return "";
     final now = DateTime.now();
-    if (dt.year == now.year && dt.month == now.month && dt.day == now.day)
-      return "Today";
+    if (isSameDay(dt, now)) return "Today";
     return "${dt.day}-${dt.month}-${dt.year}";
   }
 }
