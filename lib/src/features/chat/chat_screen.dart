@@ -176,12 +176,22 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                             final msg = ctrl.messages[index - 1];
                             bool showDate = false;
 
-                            if (index - 2 >= 0) {
-                              final prev = ctrl.messages[index - 2];
-                              showDate =
-                                  !isSameDay(msg.createdAt!, prev.createdAt!);
-                            } else {
+                            final currTime = msg.createdAt;
+                            DateTime? prevTime;
+
+                            /// First message → always show date
+                            if (index - 2 < 0) {
                               showDate = true;
+                            } else {
+                              final prev = ctrl.messages[index - 2];
+                              prevTime = prev.createdAt;
+
+                              // If either is null → treat as new day
+                              if (currTime == null || prevTime == null) {
+                                showDate = true;
+                              } else {
+                                showDate = !isSameDay(currTime, prevTime);
+                              }
                             }
 
                             return Column(
@@ -197,6 +207,7 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                                 // message bubble (styled)
                                 MessageBubble(
                                   isMe: msg.senderId == widget.identity['id'],
+                                  senderAvatar: msg.senderAvatar,
                                   senderName: msg.senderName,
                                   text: msg.text,
                                   timestamp: msg.createdAt,
