@@ -10,7 +10,16 @@ import 'src/features/chat/chat_screen.dart';
 class RumourApp extends StatelessWidget {
   final bool isFirstLaunch;
 
-  const RumourApp({super.key, required this.isFirstLaunch});
+  /// NEW — If user previously joined a room
+  final String? lastRoomId;
+  final Map<String, dynamic>? lastIdentity;
+
+  const RumourApp({
+    super.key,
+    required this.isFirstLaunch,
+    this.lastRoomId,
+    this.lastIdentity,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,14 +33,50 @@ class RumourApp extends StatelessWidget {
         colorScheme: const ColorScheme.dark(),
       ),
 
-      initialRoute: isFirstLaunch ? '/first_splash' : '/join',
+      // ---------------------------------------------------------
+      // 🚀 Decide Startup Screen
+      // ---------------------------------------------------------
+      initialRoute: _resolveInitialRoute(),
 
       routes: {
         '/first_splash': (context) => const FirstTimeSplashScreen(),
         '/join': (context) => const JoinRoomScreen(),
         '/name': (context) => const NameScreen(),
-        '/chat': (context) => const ChatScreen(),
+
+        // ------------------------------------------
+        // CHAT ROUTE — Pass session if returning user
+        // ------------------------------------------
+        '/chat': (context) {
+          final args =
+              ModalRoute.of(context)!.settings.arguments
+                  as Map<String, dynamic>?;
+
+          // If returning user:
+          if (args == null && lastRoomId != null && lastIdentity != null) {
+            return ChatScreen(
+              key: const ValueKey("resume_chat"),
+              // ChatScreen reads params using ModalRoute when needed
+            );
+          }
+
+          return const ChatScreen();
+        },
       },
     );
+  }
+
+  // ---------------------------------------------------------
+  // 🚦 Decide which screen to start with
+  // ---------------------------------------------------------
+  String _resolveInitialRoute() {
+    if (isFirstLaunch) return '/first_splash';
+
+    // If user was inside a room → go directly to chat
+    if (lastRoomId != null && lastIdentity != null) {
+      return '/chat';
+    }
+
+    // Default — Join screen
+    return '/join';
   }
 }

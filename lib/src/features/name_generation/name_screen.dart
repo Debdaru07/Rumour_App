@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/services/room_service.dart';
 import 'name_controller.dart';
 
 class NameScreen extends StatelessWidget {
@@ -49,67 +52,78 @@ class NameScreenBody extends StatelessWidget {
             const SizedBox(height: 16),
 
             // ---------------- HEADER ----------------
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                const SizedBox(width: 16),
+            StreamBuilder<int>(
+              stream: RoomService().watchMemberCount(roomId),
+              builder: (context, snap) {
+                final count = snap.data ?? 0;
 
-                // back button circle
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    height: 42,
-                    width: 42,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF1F2430),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                  ),
-                ),
-                Spacer(),
-                // room info
-                Column(
+                return Row(
                   children: [
-                    Text(
-                      "Room #$roomCode",
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "4 members",
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.textGrey,
-                      ),
-                    ),
-                  ],
-                ),
-                Spacer(),
-                // right placeholder circle
-                Container(
-                  height: 42,
-                  width: 42,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF0D0D0D),
-                    shape: BoxShape.circle,
-                  ),
-                ),
+                    const SizedBox(width: 16),
 
-                const SizedBox(width: 12),
-              ],
+                    // Back button
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        height: 42,
+                        width: 42,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF1F2430),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+
+                    const Spacer(),
+
+                    // Room info with realtime member count
+                    Column(
+                      children: [
+                        Text(
+                          "Room #$roomCode",
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "$count members",
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textGrey,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const Spacer(),
+
+                    // Placeholder right circle (Figma style)
+                    Container(
+                      height: 42,
+                      width: 42,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF0D0D0D),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+                  ],
+                );
+              },
             ),
 
-            Spacer(),
+            const Spacer(),
+
             // ---------------- IDENTITY CARD ----------------
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22),
@@ -120,7 +134,7 @@ class NameScreenBody extends StatelessWidget {
                   horizontal: 22,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F1525), // dark navy from Figma
+                  color: const Color(0xFF0F1525),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child:
@@ -139,7 +153,7 @@ class NameScreenBody extends StatelessWidget {
 
                             const SizedBox(height: 22),
 
-                            // IDENTITY NAME
+                            // Identity Name
                             Text(
                               ctrl.identity?['name'] ?? "Anonymous",
                               textAlign: TextAlign.center,
@@ -171,11 +185,20 @@ class NameScreenBody extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 50),
               child: GestureDetector(
-                onTap: () {
+                onTap: () async {
                   final identity =
                       ctrl.identity ??
                       {'id': 'anon', 'name': 'Anonymous', 'avatar': ''};
 
+                  // Save locally
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setString('lastRoomId', roomId);
+                  await prefs.setString('identity', jsonEncode(identity));
+
+                  // Join room in Firestore
+                  await RoomService().joinRoom(roomId, identity);
+
+                  // Continue → go into chat
                   Navigator.pushReplacementNamed(
                     context,
                     '/chat',

@@ -40,10 +40,31 @@ class MessageInputField extends StatelessWidget {
           const SizedBox(width: 10),
           GestureDetector(
             onTap: onSend,
-            child: CircleAvatar(
-              radius: 26,
-              backgroundColor: AppColors.accent,
-              child: const Icon(Icons.send, color: Colors.black),
+            child: Container(
+              height: 48,
+              width: 48,
+              decoration: BoxDecoration(
+                color: AppColors.accent,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.accent.withOpacity(0.35),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Transform.rotate(
+                  angle: -0.35, // ≈ -20 degrees → similar to Figma tilt
+                  child: Icon(
+                    Icons.send_rounded,
+                    size: 24,
+                    color: Colors.black,
+                    weight: 1.0, // feels thinner like Figma
+                  ),
+                ),
+              ),
             ),
           ),
         ],

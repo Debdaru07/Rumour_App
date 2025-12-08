@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants/app_colors.dart';
-import 'chat_controller.dart';
-import '../../models/message_model.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/constants/app_colors.dart';
+import '../../models/message_model.dart';
+import '../../core/services/room_service.dart';
+import 'chat_controller.dart';
 import 'widgets/date_separator.dart';
 import 'widgets/message_bubble.dart';
 import 'widgets/message_input_field.dart';
@@ -16,6 +18,7 @@ class ChatScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final args =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+
     final String roomId = args?['roomId'];
     final String? roomCode = args?['roomCode'];
     final Map<String, dynamic> identity =
@@ -63,6 +66,21 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
     super.dispose();
   }
 
+  // ---------------------------------------------------------------------------
+  // EXIT ROOM LOGIC
+  // ---------------------------------------------------------------------------
+  Future<void> _exitRoom() async {
+    await RoomService().exitRoom(widget.roomId, widget.identity);
+
+    final prefs = await SharedPreferences.getInstance();
+    prefs.remove('lastRoomId');
+    prefs.remove('identity');
+
+    if (mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, '/join', (_) => false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final ctrl = Provider.of<ChatController>(context);
@@ -74,74 +92,91 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
           children: [
             const SizedBox(height: 14),
 
-            // ---------------- TOP APP BAR ----------------
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                const SizedBox(width: 16),
+            // ---------------------------------------------------------------------------
+            // TOP BAR (with REALTIME member count)
+            // ---------------------------------------------------------------------------
+            StreamBuilder<int>(
+              stream: RoomService().watchMemberCount(widget.roomId),
+              builder: (context, snapshot) {
+                final memberCount = snapshot.data ?? 0;
 
-                // Back button circle (Figma accurate)
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    height: 42,
-                    width: 42,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF1F2430),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back,
-                      size: 22,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-
-                const Spacer(),
-
-                // Center room title
-                Column(
+                return Row(
                   children: [
-                    Text(
-                      "Room #${widget.roomCode}",
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                    const SizedBox(width: 16),
+
+                    // back button
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        height: 42,
+                        width: 42,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF1F2430),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back,
+                          size: 22,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "4 members",
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.textGrey,
+
+                    const Spacer(),
+
+                    Column(
+                      children: [
+                        Text(
+                          "Room #${widget.roomCode}",
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "$memberCount members",
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textGrey,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const Spacer(),
+
+                    // exit button
+                    GestureDetector(
+                      onTap: _exitRoom,
+                      child: Container(
+                        height: 42,
+                        width: 42,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF1F2430),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.logout,
+                          size: 22,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
+
+                    const SizedBox(width: 16),
                   ],
-                ),
-
-                const Spacer(),
-
-                // Right black placeholder circle (Figma)
-                Container(
-                  height: 42,
-                  width: 42,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFF0D0D0D),
-                  ),
-                ),
-
-                const SizedBox(width: 16),
-              ],
+                );
+              },
             ),
 
             const SizedBox(height: 20),
 
-            // ---------------- MESSAGES LIST ----------------
+            // ---------------------------------------------------------------------------
+            // MESSAGES LIST
+            // ---------------------------------------------------------------------------
             Expanded(
               child:
                   ctrl.messages.isEmpty
@@ -179,14 +214,12 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                             final currTime = msg.createdAt;
                             DateTime? prevTime;
 
-                            /// First message → always show date
                             if (index - 2 < 0) {
                               showDate = true;
                             } else {
                               final prev = ctrl.messages[index - 2];
                               prevTime = prev.createdAt;
 
-                              // If either is null → treat as new day
                               if (currTime == null || prevTime == null) {
                                 showDate = true;
                               } else {
@@ -204,7 +237,6 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                                     ),
                                   ),
 
-                                // message bubble (styled)
                                 MessageBubble(
                                   isMe: msg.senderId == widget.identity['id'],
                                   senderAvatar: msg.senderAvatar,
@@ -223,11 +255,11 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
 
             if (ctrl.loading)
               const LinearProgressIndicator(
-                minHeight: 2,
                 color: Colors.white24,
+                minHeight: 2,
               ),
 
-            // ---------------- INPUT FIELD ----------------
+            // INPUT FIELD
             MessageInputField(
               controller: _controller,
               onSend: () async {
@@ -244,9 +276,10 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                 );
 
                 await ctrl.sendMessage(widget.roomId, msg);
+
                 _controller.clear();
 
-                Future.delayed(const Duration(milliseconds: 250), () {
+                Future.delayed(const Duration(milliseconds: 200), () {
                   _scroll.animateTo(
                     _scroll.position.maxScrollExtent + 120,
                     duration: const Duration(milliseconds: 250),
@@ -261,6 +294,9 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // HELPERS
+  // ---------------------------------------------------------------------------
   bool isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
