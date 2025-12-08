@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
+import '../chat/widgets/room_tile.dart';
 
 class RoomsScreen extends StatefulWidget {
   const RoomsScreen({super.key});
@@ -157,9 +158,9 @@ class _RoomsScreenState extends State<RoomsScreen> {
                               .snapshots(),
                       builder: (context, snap) {
                         if (!snap.hasData) {
-                          return const Padding(
-                            padding: EdgeInsets.all(24),
-                            child: Center(
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(24),
                               child: CircularProgressIndicator(
                                 color: Colors.white,
                               ),
@@ -168,15 +169,14 @@ class _RoomsScreenState extends State<RoomsScreen> {
                         }
 
                         final docs = snap.data!.docs;
-
                         if (docs.isEmpty) {
                           return Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               "No rooms available.",
                               style: GoogleFonts.poppins(
-                                fontSize: 14,
                                 color: AppColors.textGrey,
+                                fontSize: 14,
                               ),
                             ),
                           );
@@ -186,119 +186,29 @@ class _RoomsScreenState extends State<RoomsScreen> {
                           children:
                               docs.map((doc) {
                                 final data = doc.data() as Map<String, dynamic>;
-                                final roomId = doc.id;
-                                final roomName = data["name"] ?? '';
-                                final roomCode = data["code"] ?? '';
-                                final members = data["members"] ?? [];
+                                return RoomTile(
+                                  roomId: doc.id,
+                                  name: data["name"] ?? "",
+                                  code: data["code"] ?? "",
+                                  members:
+                                      (data["members"] as List? ?? []).length,
 
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 14),
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF0F1525),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () {
-                                          Navigator.pushNamed(
-                                            context,
-                                            "/name",
-                                            arguments: {
-                                              "roomId": roomId,
-                                              "roomCode": roomCode,
-                                            },
-                                          );
-                                        },
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(10),
-                                              decoration: BoxDecoration(
-                                                color: AppColors.accent,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: const Icon(
-                                                Icons.group,
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  roomName,
-                                                  style: GoogleFonts.poppins(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  "${members.length} members",
-                                                  style: GoogleFonts.poppins(
-                                                    fontSize: 13,
-                                                    color: AppColors.textGrey,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
+                                  onOpen: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      "/name",
+                                      arguments: {
+                                        "roomId": doc.id,
+                                        "roomCode": data["code"],
+                                      },
+                                    );
+                                  },
+
+                                  onDelete:
+                                      () => _confirmDelete(
+                                        doc.id,
+                                        data["name"] ?? "",
                                       ),
-                                      const Spacer(),
-                                      GestureDetector(
-                                        onTapDown:
-                                            (_) => setState(
-                                              () {},
-                                            ), // enables tap animation
-                                        onTap:
-                                            () => _confirmDelete(
-                                              roomId,
-                                              roomName,
-                                            ),
-                                        child: AnimatedScale(
-                                          duration: const Duration(
-                                            milliseconds: 120,
-                                          ),
-                                          scale: 0.92,
-                                          child: Container(
-                                            height: 34,
-                                            width: 34,
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(
-                                                0.06,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color: Colors.redAccent
-                                                    .withOpacity(0.35),
-                                                width: 1.0,
-                                              ),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.redAccent
-                                                      .withOpacity(0.15),
-                                                  blurRadius: 10,
-                                                  spreadRadius: 1,
-                                                ),
-                                              ],
-                                            ),
-                                            child: Icon(
-                                              Icons.delete_outline,
-                                              size: 18,
-                                              color: Colors.redAccent
-                                                  .withOpacity(0.9),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                                 );
                               }).toList(),
                         );
