@@ -5,7 +5,7 @@ import '../../../core/constants/app_colors.dart';
 class MessageBubble extends StatelessWidget {
   final bool isMe;
   final String senderName;
-  final String senderAvatar; // <-- add this
+  final String senderAvatar;
   final String text;
   final DateTime? timestamp;
 
@@ -20,7 +20,6 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // MAX width of bubble (matches Figma proportions)
     const double maxBubbleWidth = 280;
 
     return Container(
@@ -30,36 +29,33 @@ class MessageBubble extends StatelessWidget {
         mainAxisAlignment:
             isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          // ---------------- AVATAR (Others Only) ----------------
-          // if (!isMe)
-          Container(
-            margin: const EdgeInsets.only(right: 10),
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: Colors.grey.shade800,
-              backgroundImage:
-                  (senderAvatar.isNotEmpty) ? NetworkImage(senderAvatar) : null,
-              child:
-                  senderAvatar.isEmpty
-                      ? Text(
-                        senderName.isNotEmpty ? senderName[0] : "?",
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      )
-                      : null,
+          if (!isMe)
+            Container(
+              margin: const EdgeInsets.only(right: 10),
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.grey.shade800,
+                backgroundImage:
+                    senderAvatar.isNotEmpty ? NetworkImage(senderAvatar) : null,
+                child:
+                    senderAvatar.isEmpty
+                        ? Text(
+                          senderName.isNotEmpty ? senderName[0] : "?",
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        )
+                        : null,
+              ),
             ),
-          ),
 
-          // ---------------- BUBBLE + NAME ----------------
           Flexible(
             child: Column(
               crossAxisAlignment:
                   isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
-                // Sender name (others only)
                 if (!isMe)
                   Padding(
                     padding: const EdgeInsets.only(left: 2, bottom: 6),
@@ -73,7 +69,6 @@ class MessageBubble extends StatelessWidget {
                     ),
                   ),
 
-                // ---------------- MESSAGE BUBBLE ----------------
                 Container(
                   constraints: const BoxConstraints(maxWidth: maxBubbleWidth),
                   padding: const EdgeInsets.symmetric(
@@ -101,7 +96,6 @@ class MessageBubble extends StatelessWidget {
                             ? CrossAxisAlignment.end
                             : CrossAxisAlignment.start,
                     children: [
-                      // Message text
                       Text(
                         text,
                         style: GoogleFonts.poppins(
@@ -113,7 +107,6 @@ class MessageBubble extends StatelessWidget {
 
                       const SizedBox(height: 6),
 
-                      // Timestamp
                       Text(
                         _formatTime(timestamp),
                         style: GoogleFonts.poppins(

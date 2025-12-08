@@ -10,8 +10,6 @@ import 'src/features/chat/chat_screen.dart';
 
 class RumourApp extends StatelessWidget {
   final bool isFirstLaunch;
-
-  /// NEW — If user previously joined a room
   final String? lastRoomId;
   final Map<String, dynamic>? lastIdentity;
 
@@ -27,37 +25,24 @@ class RumourApp extends StatelessWidget {
     return MaterialApp(
       title: "Rumour",
       debugShowCheckedModeBanner: false,
-
       theme: ThemeData(
         scaffoldBackgroundColor: AppColors.background,
         textTheme: GoogleFonts.poppinsTextTheme(),
         colorScheme: const ColorScheme.dark(),
       ),
-
-      // ---------------------------------------------------------
-      // 🚀 Decide Startup Screen
-      // ---------------------------------------------------------
-      initialRoute: _resolveInitialRoute(),
-
+      initialRoute: _initialRoute(),
       routes: {
-        '/first_splash': (context) => const FirstTimeSplashScreen(),
-        '/join': (context) => const JoinRoomScreen(),
-        '/name': (context) => const NameScreen(),
-        '/rooms': (context) => const RoomsScreen(),
-        // ------------------------------------------
-        // CHAT ROUTE — Pass session if returning user
-        // ------------------------------------------
+        '/first_splash': (_) => const FirstTimeSplashScreen(),
+        '/join': (_) => const JoinRoomScreen(),
+        '/name': (_) => const NameScreen(),
+        '/rooms': (_) => const RoomsScreen(),
         '/chat': (context) {
           final args =
               ModalRoute.of(context)!.settings.arguments
                   as Map<String, dynamic>?;
 
-          // If returning user:
           if (args == null && lastRoomId != null && lastIdentity != null) {
-            return ChatScreen(
-              key: const ValueKey("resume_chat"),
-              // ChatScreen reads params using ModalRoute when needed
-            );
+            return const ChatScreen(key: ValueKey("resume_chat"));
           }
 
           return const ChatScreen();
@@ -66,18 +51,9 @@ class RumourApp extends StatelessWidget {
     );
   }
 
-  // ---------------------------------------------------------
-  // 🚦 Decide which screen to start with
-  // ---------------------------------------------------------
-  String _resolveInitialRoute() {
+  String _initialRoute() {
     if (isFirstLaunch) return '/first_splash';
-
-    // If user was inside a room → go directly to chat
-    if (lastRoomId != null && lastIdentity != null) {
-      return '/chat';
-    }
-
-    // Default — Join screen
+    if (lastRoomId != null && lastIdentity != null) return '/chat';
     return '/rooms';
   }
 }

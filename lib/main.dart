@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+
 import 'firebase_options.dart';
 import 'app.dart';
 import 'src/core/services/session_service.dart';
@@ -15,10 +16,7 @@ void main() async {
     persistenceEnabled: true,
   );
 
-  // FIRST LAUNCH CHECK
   final isFirstLaunch = await FirstLaunchService.isFirstLaunch();
-
-  // CHECK SAVED SESSION
   final session = await SessionService.loadSession();
 
   runApp(

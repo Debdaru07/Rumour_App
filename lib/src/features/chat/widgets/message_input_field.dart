@@ -56,12 +56,12 @@ class MessageInputField extends StatelessWidget {
               ),
               child: Center(
                 child: Transform.rotate(
-                  angle: -0.35, // ≈ -20 degrees → similar to Figma tilt
+                  angle: -0.35,
                   child: Icon(
                     Icons.send_rounded,
                     size: 24,
                     color: Colors.black,
-                    weight: 1.0, // feels thinner like Figma
+                    weight: 1.0,
                   ),
                 ),
               ),

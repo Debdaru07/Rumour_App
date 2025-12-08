@@ -22,9 +22,9 @@ class ChatScreen extends StatelessWidget {
     final args =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
 
-    final String roomId = args?['roomId'] ?? '';
-    final String? roomCode = args?['roomCode'];
-    final Map<String, dynamic> identity =
+    final roomId = args?['roomId'] ?? '';
+    final roomCode = args?['roomCode'];
+    final identity =
         args?['identity'] ?? {'id': 'anon', 'name': 'Anonymous', 'avatar': ''};
 
     return ChangeNotifierProvider(
@@ -65,8 +65,6 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
   @override
   void initState() {
     super.initState();
-
-    // PAGINATION TRIGGER
     _scroll.addListener(() {
       if (_scroll.position.pixels <= 150) {
         Provider.of<ChatController>(
@@ -84,9 +82,6 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
     super.dispose();
   }
 
-  // ---------------------------------------------------------------------------
-  // EXIT ROOM LOGIC
-  // ---------------------------------------------------------------------------
   Future<void> _exitRoom() async {
     await RoomService().exitRoom(widget.roomId, widget.identity);
 
@@ -110,9 +105,6 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
           children: [
             const SizedBox(height: 14),
 
-            // ---------------------------------------------------------------------------
-            // TOP BAR WITH REALTIME MEMBER COUNT
-            // ---------------------------------------------------------------------------
             StreamBuilder<DocumentSnapshot>(
               stream:
                   FirebaseFirestore.instance
@@ -131,9 +123,7 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                 return Row(
                   children: [
                     const SizedBox(width: 16),
-
                     const Spacer(),
-
                     Column(
                       children: [
                         Text(
@@ -149,15 +139,12 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                           "$memberCount members",
                           style: GoogleFonts.poppins(
                             fontSize: 13,
-                            fontWeight: FontWeight.w400,
                             color: AppColors.textGrey,
                           ),
                         ),
                       ],
                     ),
-
                     const Spacer(),
-
                     GestureDetector(
                       onTap: _exitRoom,
                       child: Container(
@@ -174,7 +161,6 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                         ),
                       ),
                     ),
-
                     const SizedBox(width: 16),
                   ],
                 );
@@ -183,9 +169,6 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
 
             const SizedBox(height: 20),
 
-            // ---------------------------------------------------------------------------
-            // MESSAGE LIST (REALTIME + PAGINATION)
-            // ---------------------------------------------------------------------------
             Expanded(
               child:
                   ctrl.messages.isEmpty
@@ -208,18 +191,15 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                         itemBuilder: (context, index) {
                           final msg = ctrl.messages[index];
 
-                          // ---------------- SYSTEM MESSAGES ----------------
                           if (msg.type == "system") {
                             return SystemMessageBanner(text: msg.text);
                           }
 
                           bool showDate = false;
-
                           if (index == 0) {
                             showDate = true;
                           } else {
                             final prev = ctrl.messages[index - 1];
-
                             if (msg.createdAt == null ||
                                 prev.createdAt == null) {
                               showDate = true;
@@ -237,7 +217,6 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                                     text: formatDateLabel(msg.createdAt),
                                   ),
                                 ),
-
                               MessageBubble(
                                 isMe: msg.senderId == widget.identity['id'],
                                 senderAvatar: msg.senderAvatar,
@@ -245,7 +224,6 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                                 text: msg.text,
                                 timestamp: msg.createdAt,
                               ),
-
                               const SizedBox(height: 6),
                             ],
                           );
@@ -262,9 +240,6 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
                 ),
               ),
 
-            // ---------------------------------------------------------------------------
-            // INPUT FIELD
-            // ---------------------------------------------------------------------------
             MessageInputField(
               controller: _controller,
               onSend: () async {
@@ -299,9 +274,6 @@ class _ChatScreenBodyState extends State<ChatScreenBody> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // HELPERS
-  // ---------------------------------------------------------------------------
   bool isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }

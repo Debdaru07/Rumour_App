@@ -20,7 +20,6 @@ class MessageModel {
     this.createdAt,
   });
 
-  // ------------------------ SAFE FROM JSON (Realtime DB / Manual JSON) ------------------------
   factory MessageModel.fromJson(String id, Map<String, dynamic> json) {
     return MessageModel(
       id: id,
@@ -30,13 +29,12 @@ class MessageModel {
       senderAvatar: json['senderAvatar'] ?? "",
       type: json['type'] ?? "user",
       createdAt:
-          (json['createdAt'] is Timestamp)
+          json['createdAt'] is Timestamp
               ? (json['createdAt'] as Timestamp).toDate()
               : null,
     );
   }
 
-  // ------------------------ SAFE FROM FIRESTORE ------------------------
   factory MessageModel.fromFirestore(DocumentSnapshot doc) {
     final json = doc.data() as Map<String, dynamic>? ?? {};
     return MessageModel(
@@ -46,12 +44,10 @@ class MessageModel {
       senderName: json['senderName'] ?? "System",
       senderAvatar: json['senderAvatar'] ?? "",
       type: json['type'] ?? "user",
-      createdAt:
-          (json['createdAt'] as Timestamp?)?.toDate(), // server timestamp safe
+      createdAt: (json['createdAt'] as Timestamp?)?.toDate(),
     );
   }
 
-  // ------------------------ SAFE FROM CACHED LOCAL STORAGE ------------------------
   factory MessageModel.fromCachedMap(Map<String, dynamic> json) {
     return MessageModel(
       id: json['id'] ?? "",
@@ -61,23 +57,20 @@ class MessageModel {
       senderAvatar: json['senderAvatar'] ?? "",
       type: json['type'] ?? "user",
       createdAt:
-          (json['createdAt'] != null)
+          json['createdAt'] != null
               ? DateTime.tryParse(json['createdAt'])
               : null,
     );
   }
 
-  // ------------------------ TO MAP (FOR FIRESTORE SEND) ------------------------
   Map<String, dynamic> toMap() => {
     'text': text,
     'senderId': senderId,
     'senderName': senderName,
     'senderAvatar': senderAvatar,
     'type': type,
-    // DO NOT include createdAt — Firestore sets it on write
   };
 
-  // ------------------------ TO CACHE (LOCAL STORAGE ONLY) ------------------------
   Map<String, dynamic> toCacheMap() => {
     'id': id,
     'text': text,

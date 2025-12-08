@@ -17,9 +17,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
   bool creating = false;
   String? errorText;
 
-  // ---------------------------------------------------------------
-  // CREATE ROOM HANDLER
-  // ---------------------------------------------------------------
   Future<void> _createRoom() async {
     final name = nameCtrl.text.trim();
     final code = codeCtrl.text.trim();
@@ -39,7 +36,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
       errorText = null;
     });
 
-    // Check if room code already exists
     final query =
         await FirebaseFirestore.instance
             .collection("rooms")
@@ -54,7 +50,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
       return;
     }
 
-    // Create room
     final newRoom = await FirebaseFirestore.instance.collection("rooms").add({
       "name": name,
       "code": code,
@@ -62,7 +57,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
       "createdAt": FieldValue.serverTimestamp(),
     });
 
-    // Navigate to Name Screen to auto join
     if (!mounted) return;
 
     Navigator.pushNamed(
@@ -74,9 +68,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
     setState(() => creating = false);
   }
 
-  // --------------------------------------------------------------------------
-  // UI
-  // --------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,7 +77,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
           children: [
             const SizedBox(height: 14),
 
-            // --------------------------- TITLE ---------------------------
             Center(
               child: Text(
                 "Create a Room",
@@ -106,9 +96,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ---------------------------------------------------------
-                    // EXISTING ROOMS
-                    // ---------------------------------------------------------
                     Text(
                       "Existing Rooms",
                       style: GoogleFonts.poppins(
@@ -142,7 +129,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
 
                         if (docs.isEmpty) {
                           return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
+                            padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               "No rooms available.",
                               style: GoogleFonts.poppins(
@@ -194,8 +181,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
                                           ),
                                         ),
                                         const SizedBox(width: 16),
-
-                                        // Room Name + Members
                                         Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
@@ -217,9 +202,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
                                             ),
                                           ],
                                         ),
-
                                         const Spacer(),
-
                                         const Icon(
                                           Icons.arrow_forward_ios,
                                           size: 16,
@@ -236,9 +219,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
 
                     const SizedBox(height: 30),
 
-                    // ---------------------------------------------------------
-                    // CREATE NEW ROOM
-                    // ---------------------------------------------------------
                     Text(
                       "Create a New Room",
                       style: GoogleFonts.poppins(
@@ -306,7 +286,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
 
                     const SizedBox(height: 26),
 
-                    // "Join a Room?"
                     Center(
                       child: GestureDetector(
                         onTap: () => Navigator.pushNamed(context, "/join"),
@@ -332,9 +311,6 @@ class _RoomsScreenState extends State<RoomsScreen> {
     );
   }
 
-  // ---------------------------------------------------------------
-  // Custom Input Field
-  // ---------------------------------------------------------------
   Widget _inputField({
     required TextEditingController controller,
     required String label,
